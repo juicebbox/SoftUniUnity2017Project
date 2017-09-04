@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour {
     private bool facingRight = true;
 
     private bool meleeAttack;
-    private bool switchToRanged;
+    private bool rangedAttack;
     private float attackTime = 0.66f;
     private float attackTimer = 0;
 
@@ -26,6 +26,11 @@ public class PlayerController : MonoBehaviour {
     private LayerMask groundLayerMask;
     [SerializeField]
     private float jumpPower = 10f;
+    [SerializeField]
+    private GameObject bulletPrefab;
+    [SerializeField]
+    private Transform gunPoint;
+
     void Start ()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -49,13 +54,18 @@ public class PlayerController : MonoBehaviour {
 
     private void HandleInput()
     {
-
+        // melee attack
         if(Input.GetAxisRaw("Fire1") > 0 && !meleeAttack)
         {
             meleeAttack = true;
         }
+        // ranged attack
+        if (Input.GetAxisRaw("Fire2") > 0 && !rangedAttack)
+        {
+            rangedAttack = true;
+        }
         // movement
-        if(!meleeAttack)
+        if (!meleeAttack)
         {
             rb.velocity = new Vector2(movementX, movementY);
         }
@@ -87,6 +97,7 @@ public class PlayerController : MonoBehaviour {
         // Attack animation trigger
         anim.SetBool("MeleeAttack", meleeAttack);
         anim.SetBool("IsJumping", !isGrounded);
+        anim.SetBool("IsShooting", rangedAttack);
     }
     private void HandleAttacks()
     {
@@ -108,6 +119,19 @@ public class PlayerController : MonoBehaviour {
         {
             meleeAttack = false;
         }
+        if(rangedAttack)
+        {
+            if(attackTimer == 0)
+            {
+                ThrowKnife();
+            }
+            attackTimer += Time.deltaTime;
+            if (attackTime < attackTimer)
+            {
+                attackTimer = 0;
+                rangedAttack = false;
+            }
+        }
     }
 
     private void Flip()
@@ -116,6 +140,22 @@ public class PlayerController : MonoBehaviour {
         {
             transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
             facingRight = !facingRight;
+        }
+    }
+
+    public void ThrowKnife()
+    {
+        if(facingRight)
+        {
+            GameObject tempBullet = Instantiate(bulletPrefab, gunPoint.position, gunPoint.rotation);
+
+            tempBullet.GetComponent<Bullet>().SetDirection(Vector2.right);
+        }
+        else
+        {
+            GameObject tempBullet = Instantiate(bulletPrefab, gunPoint.position, Quaternion.Euler(new Vector3(0, 0, 180)));
+
+            tempBullet.GetComponent<Bullet>().SetDirection(Vector2.left);
         }
     }
 }
