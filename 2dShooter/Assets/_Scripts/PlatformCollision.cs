@@ -13,17 +13,11 @@ public class PlatformCollision : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.gameObject.tag == "Player")
-        {
-            platformCollider.enabled = false;
-        }
+        platformCollider.enabled = false;
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Player")
-        {
-            platformCollider.enabled = true;
-        }
+        platformCollider.enabled = true;
     }
 }

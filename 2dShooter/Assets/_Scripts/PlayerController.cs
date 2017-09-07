@@ -26,15 +26,31 @@ public class PlayerController : MonoBehaviour {
     private LayerMask groundLayerMask;
     [SerializeField]
     private float jumpPower = 10f;
+
     [SerializeField]
     private GameObject bulletPrefab;
     [SerializeField]
     private Transform gunPoint;
 
+    private new AudioSource audio;
+
+    [SerializeField]
+    private AudioClip gunAudio;
+    [SerializeField]
+    private AudioClip swordAudio;
+    [SerializeField]
+    private AudioClip jumpAudio;
+    [SerializeField]
+    private AudioClip walkAudio;
+
+    private CharacterHealth health;
+
     void Start ()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        audio = GetComponent<AudioSource>();
+        health = GetComponent<CharacterHealth>();
     }
 
     private void Update()
@@ -46,10 +62,29 @@ public class PlayerController : MonoBehaviour {
     void FixedUpdate ()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.20f, groundLayerMask);
+
+        // Play move sound
+        if (isGrounded && movementX != 0)
+        {
+            if(!audio.isPlaying)
+            {
+                audio.PlayOneShot(walkAudio);
+            }
+        }
+
         HandleInput();
         Flip();
         HandleAnimation();
         HandleAttacks();
+        CheckIfDead();
+    }
+
+    private void CheckIfDead()
+    {
+        if(health.IsDead)
+        {
+            Debug.Log("Dead");
+        }
     }
 
     private void HandleInput()
@@ -57,7 +92,7 @@ public class PlayerController : MonoBehaviour {
         // melee attack
         if(Input.GetAxisRaw("Fire1") > 0 && !meleeAttack)
         {
-            meleeAttack = true;
+             meleeAttack = true;
         }
         // ranged attack
         if (Input.GetAxisRaw("Fire2") > 0 && !rangedAttack)
@@ -65,7 +100,7 @@ public class PlayerController : MonoBehaviour {
             rangedAttack = true;
         }
         // movement
-        if (!meleeAttack)
+        if (!(meleeAttack && isGrounded))
         {
             rb.velocity = new Vector2(movementX, movementY);
         }
@@ -78,6 +113,7 @@ public class PlayerController : MonoBehaviour {
         if(Input.GetAxisRaw("Jump") > 0 && isGrounded)
         {
             rb.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
+            audio.PlayOneShot(jumpAudio);
         }
     }
 
@@ -85,29 +121,30 @@ public class PlayerController : MonoBehaviour {
     private void HandleAnimation()
     {
         // Running Animation On/Off
-        if (movementX != 0)
-        {
-            anim.SetBool("IsRunning", true);
-        }
-        else
-        {
-            anim.SetBool("IsRunning", false);
-        }
+        anim.SetBool("IsRunning", movementX != 0);
 
         // Attack animation trigger
         anim.SetBool("MeleeAttack", meleeAttack);
         anim.SetBool("IsJumping", !isGrounded);
         anim.SetBool("IsShooting", rangedAttack);
+        anim.SetBool("IsDead", health.IsDead);
     }
     private void HandleAttacks()
     {
-        if(meleeAttack && isGrounded)
+        if(meleeAttack)
         {
+            if(attackTimer == 0)
+            {
+                audio.PlayOneShot(swordAudio);
+            }
+
             attackTimer += Time.deltaTime;
 
-            Debug.Log(isGrounded);
-            movementX = 0;
-            movementY = 0;
+            if (isGrounded)
+            {
+                movementX = 0;
+                movementY = 0;
+            }
 
             if (attackTime < attackTimer)
             {
@@ -115,10 +152,7 @@ public class PlayerController : MonoBehaviour {
                 meleeAttack = false;
             }
         }
-        else
-        {
-            meleeAttack = false;
-        }
+
         if(rangedAttack)
         {
             if(attackTimer == 0)
@@ -157,5 +191,6 @@ public class PlayerController : MonoBehaviour {
 
             tempBullet.GetComponent<Bullet>().SetDirection(Vector2.left);
         }
+        audio.PlayOneShot(gunAudio);
     }
 }

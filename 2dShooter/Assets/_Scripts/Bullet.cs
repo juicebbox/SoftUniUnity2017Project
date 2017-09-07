@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class Bullet : MonoBehaviour {
+[RequireComponent(typeof(Collider2D))]
+public class Bullet : MonoBehaviour
+{
+
+    public float damage = 30;
 
     [SerializeField]
     private float speed;
@@ -34,5 +38,14 @@ public class Bullet : MonoBehaviour {
     private void OnBecameInvisible()
     {
         Destroy(gameObject, 2f);
+    }
+
+    private void OnTriggerEnter2D(Collider2D col)
+    {
+        if(col.gameObject.tag == "Enemy")
+        {
+            col.gameObject.GetComponent<CharacterHealth>().TakeDamage(damage);
+            Destroy(gameObject);
+        }
     }
 }

@@ -78,8 +78,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\_Scripts\ArmorType.cs" />
     <Compile Include="Assets\_Scripts\Bullet.cs" />
     <Compile Include="Assets\_Scripts\CameraFollow.cs" />
+    <Compile Include="Assets\_Scripts\CharacterHealth.cs" />
+    <Compile Include="Assets\_Scripts\EnemyEyeSight.cs" />
+    <Compile Include="Assets\_Scripts\GoblinController.cs" />
     <Compile Include="Assets\_Scripts\PlatformCollision.cs" />
     <Compile Include="Assets\_Scripts\PlayerController.cs" />
   </ItemGroup>
