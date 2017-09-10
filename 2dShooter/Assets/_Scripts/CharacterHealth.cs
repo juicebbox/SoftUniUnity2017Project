@@ -9,8 +9,12 @@ public class CharacterHealth : MonoBehaviour
     //** There are properties to give information for healt status.
     //** Each character has to implement it's own dying pattern.
 
+    private GameMaster gameMaster;
+
     [SerializeField]
-    private float health;
+    private float maxHealth;
+
+    private float currentHealth;
 
     [SerializeField]
     private ArmorType armorType;
@@ -33,14 +37,27 @@ public class CharacterHealth : MonoBehaviour
         }
     }
 
-    public float Health
+    public float MaxHealth
     {
         get
         {
-            return health;
+            return maxHealth;
         }
     }
 
+    public float CurrentHealth
+    {
+        get
+        {
+            return currentHealth;
+        }
+    }
+
+    private void Start()
+    {
+        currentHealth = maxHealth;
+        gameMaster = GameObject.Find("GameMaster").GetComponent<GameMaster>();
+    }
 
     void Update ()
     {
@@ -49,7 +66,7 @@ public class CharacterHealth : MonoBehaviour
 
     private void CheckIfDead()
     {
-        if (health <= 0)
+        if (currentHealth <= 0)
         {
             isDead = true;
         }
@@ -58,6 +75,6 @@ public class CharacterHealth : MonoBehaviour
     public void TakeDamage(float amount)
     {
         float armorDefence = 1f - (int)armorType / 100f;
-        health -= amount * armorDefence;
+        currentHealth -= (amount * armorDefence) * gameMaster.enemyDamageMultiplier;
     }
 }

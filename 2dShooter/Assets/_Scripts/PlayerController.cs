@@ -43,48 +43,71 @@ public class PlayerController : MonoBehaviour {
     [SerializeField]
     private AudioClip walkAudio;
 
-    private CharacterHealth health;
+    private PlayerHealth health;
+
+    [SerializeField]
+    private SwordHitArea swordHitArea;
+
+    [SerializeField]
+    private float swordDamage = 20f;
+    private Collider2D playerCollider;
+
+    private GameMaster gameMaster;
+
+    private float deadTimer = 0;
+    private float dyingTime = 5f;
 
     void Start ()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         audio = GetComponent<AudioSource>();
-        health = GetComponent<CharacterHealth>();
+        health = GetComponent<PlayerHealth>();
+        playerCollider = GetComponent<Collider2D>();
+        gameMaster = GameObject.Find("GameMaster").GetComponent<GameMaster>();
     }
 
     private void Update()
     {
         movementX = Input.GetAxis("Horizontal") * movementSpeed;
         movementY = rb.velocity.y;
+        if(rb.velocity.y > jumpPower)
+        {
+            movementY = jumpPower;
+        }
     }
 
     void FixedUpdate ()
     {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.20f, groundLayerMask);
-
-        // Play move sound
-        if (isGrounded && movementX != 0)
+        if (!health.IsDead)
         {
-            if(!audio.isPlaying)
+
+            isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.15f, groundLayerMask);
+
+            // Play move sound
+            if (isGrounded && movementX != 0)
             {
-                audio.PlayOneShot(walkAudio);
+                if(!audio.isPlaying)
+                {
+                    audio.PlayOneShot(walkAudio);
+                }
+            }
+
+            HandleInput();
+            Flip();
+            HandleAttacks();
+        }
+        else
+        {
+            deadTimer += Time.deltaTime;
+
+            if(deadTimer > dyingTime)
+            {
+                gameMaster.gameStarted = false;
+                Time.timeScale = 0;
             }
         }
-
-        HandleInput();
-        Flip();
         HandleAnimation();
-        HandleAttacks();
-        CheckIfDead();
-    }
-
-    private void CheckIfDead()
-    {
-        if(health.IsDead)
-        {
-            Debug.Log("Dead");
-        }
     }
 
     private void HandleInput()
@@ -100,17 +123,13 @@ public class PlayerController : MonoBehaviour {
             rangedAttack = true;
         }
         // movement
-        if (!(meleeAttack && isGrounded))
+        if (!(meleeAttack))
         {
-            rb.velocity = new Vector2(movementX, movementY);
-        }
-        else
-        {
-            rb.velocity = Vector2.zero;
+            rb.velocity = new Vector2(movementX, rb.velocity.y);
         }
 
         // Jump
-        if(Input.GetAxisRaw("Jump") > 0 && isGrounded)
+        if(Input.GetButtonDown("Jump") && isGrounded)
         {
             rb.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
             audio.PlayOneShot(jumpAudio);
@@ -136,6 +155,10 @@ public class PlayerController : MonoBehaviour {
             if(attackTimer == 0)
             {
                 audio.PlayOneShot(swordAudio);
+                if(swordHitArea.EnemyNear)
+                {
+                    swordHitArea.EnemyHealth.TakeDamage(swordDamage);
+                }
             }
 
             attackTimer += Time.deltaTime;
@@ -143,7 +166,7 @@ public class PlayerController : MonoBehaviour {
             if (isGrounded)
             {
                 movementX = 0;
-                movementY = 0;
+                movementY = rb.velocity.y;
             }
 
             if (attackTime < attackTimer)
@@ -157,7 +180,7 @@ public class PlayerController : MonoBehaviour {
         {
             if(attackTimer == 0)
             {
-                ThrowKnife();
+                ShootGun();
             }
             attackTimer += Time.deltaTime;
             if (attackTime < attackTimer)
@@ -177,7 +200,7 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    public void ThrowKnife()
+    public void ShootGun()
     {
         if(facingRight)
         {
@@ -193,4 +216,5 @@ public class PlayerController : MonoBehaviour {
         }
         audio.PlayOneShot(gunAudio);
     }
+
 }

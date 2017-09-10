@@ -1,4 +1,16 @@
 sceneSetups:
-- path: Assets/_Scenes/working.unity
+- path: Assets/_Scenes/GameMaster.unity
   isLoaded: 1
   isActive: 1
+- path: Assets/_Scenes/pauseMenu.unity
+  isLoaded: 0
+  isActive: 0
+- path: Assets/_Scenes/Level01.unity
+  isLoaded: 0
+  isActive: 0
+- path: Assets/_Scenes/mainMenu.unity
+  isLoaded: 0
+  isActive: 0
+- path: Assets/_Scenes/working.unity
+  isLoaded: 0
+  isActive: 0

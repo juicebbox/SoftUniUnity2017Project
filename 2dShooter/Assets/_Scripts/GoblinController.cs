@@ -12,6 +12,7 @@ public class GoblinController : MonoBehaviour
     private Transform[] patrolPoints;
     private int currentPoint = 0;
 
+    [SerializeField]
     private float pointRange = 0.05f;
     [SerializeField]
     private float attackRange = 2f;
@@ -34,6 +35,11 @@ public class GoblinController : MonoBehaviour
     [SerializeField]
     private float attackTime;
     private float timeSinceLastAttack = 0;
+
+    private RandomItemDrop drop;
+
+    private bool isDying;
+
     void Start ()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -41,15 +47,25 @@ public class GoblinController : MonoBehaviour
         anim = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
         colider = GetComponent<Collider2D>();
+        drop = GetComponent<RandomItemDrop>();
     }
-	
-	void FixedUpdate ()
+
+    private void Update()
     {
-        if(!health.IsDead)
+        if (!enemyEyeSight.EnemySpotted && patrolPoints.Length != 0)
         {
-            if (!enemyEyeSight.EnemySpotted)
+            SetCurrentPointNumber();
+        }
+    }
+
+    void FixedUpdate ()
+    {
+        
+        if(health != null && !health.IsDead)
+        {
+ 
+            if (!enemyEyeSight.EnemySpotted && patrolPoints.Length != 0)
             {
-                SetCurrentPointNumber();
                 Patrol(currentPoint);
             }
             else if (enemyEyeSight.EnemySpotted)
@@ -57,8 +73,6 @@ public class GoblinController : MonoBehaviour
                 AttackPlayer();
             }
         }
-
-        // He looks at you until he dies
         Flip();
 
         HandleAnimation();
@@ -87,13 +101,13 @@ public class GoblinController : MonoBehaviour
         if(performingAttack && timeSinceLastAttack >= attackTime)
         {
             timeSinceLastAttack = 0;
-            player.GetComponent<CharacterHealth>().TakeDamage(attackDamage);
+            player.GetComponent<PlayerHealth>().TakeDamage(attackDamage);
         }
         else if(performingAttack)
         {
             timeSinceLastAttack += Time.deltaTime;
         }
-        rb.velocity = new Vector2(movementX, 0);
+        rb.velocity = new Vector2(movementX, rb.velocity.y);
     }
 
     private void CheckIfDead()
@@ -103,14 +117,20 @@ public class GoblinController : MonoBehaviour
             colider.enabled = false;
             rb.isKinematic = true;
             Destroy(gameObject, 5f);
+            rb.velocity = Vector2.zero;
+            if(!isDying)
+            {
+                drop.DropItems();
+                isDying = true;
+            }
         }
     }
 
     private void SetCurrentPointNumber()
     {
-        if((transform.position.x - patrolPoints[currentPoint].position.x <= pointRange && !facingRight) || (transform.position.x - patrolPoints[currentPoint].position.x >= -pointRange && facingRight))
+        if ((transform.position.x - patrolPoints[currentPoint].position.x <= pointRange && !facingRight) || (transform.position.x - patrolPoints[currentPoint].position.x >= -pointRange && facingRight))
         {
-            if(currentPoint < patrolPoints.Length - 1)
+            if (currentPoint < patrolPoints.Length - 1)
             {
                 currentPoint++;
             }
@@ -123,19 +143,15 @@ public class GoblinController : MonoBehaviour
 
     private void Patrol(int currentPoint)
     {
-        if(patrolPoints[currentPoint].position.x < transform.position.x)
+        if(patrolPoints[currentPoint].position.x - transform.position.x <= pointRange)
         {
             movementX = -speed;
         }
-        else if(patrolPoints[currentPoint].position.x > transform.position.x)
+        else
         {
             movementX = speed;
         }
-        else
-        {
-            movementX = 0;
-        }
-        rb.velocity = new Vector2(movementX, 0);
+        rb.velocity = Vector2.right * movementX;
     }
 
     private void Flip()

@@ -15,9 +15,14 @@ public class Bullet : MonoBehaviour
     private Rigidbody2D myRigidbody;
     private Vector2 direction;
 
+    private Animator hitEffectAC;
+    [SerializeField]
+    private GameObject hitEffect;
+
 	void Start ()
     {
         myRigidbody = GetComponent<Rigidbody2D>();
+        hitEffect.SetActive(false);
 	}
 
     private void Update()
@@ -45,7 +50,12 @@ public class Bullet : MonoBehaviour
         if(col.gameObject.tag == "Enemy")
         {
             col.gameObject.GetComponent<CharacterHealth>().TakeDamage(damage);
-            Destroy(gameObject);
+            //myRigidbody.collisionDetectionMode = CollisionDetectionMode2D.None;
+            hitEffect.SetActive(true);
+
+            hitEffectAC = hitEffect.GetComponentInChildren<Animator>();
+            speed = 0;
+            Destroy(gameObject, 0.4f);
         }
     }
 }
