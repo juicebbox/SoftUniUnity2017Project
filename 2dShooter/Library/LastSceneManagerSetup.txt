@@ -6,7 +6,7 @@ sceneSetups:
   isLoaded: 0
   isActive: 0
 - path: Assets/_Scenes/Level01.unity
-  isLoaded: 0
+  isLoaded: 1
   isActive: 0
 - path: Assets/_Scenes/mainMenu.unity
   isLoaded: 0
